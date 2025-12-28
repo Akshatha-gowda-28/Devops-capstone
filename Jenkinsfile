@@ -3,11 +3,13 @@ pipeline {
 
     stages {
         stage('Build') {
-            steps {
-                echo "Building from branch: ${env.BRANCH_NAME}"
-                sh 'ls -l'
-                sh 'docker build -t webapp:${env.BRANCH_NAME} .'
-            }
+           steps {
+                sh '''
+                #!/bin/bash
+                echo "Building from branch: ${BRANCH_NAME}"
+                ls -l
+                '''
+           }
         }
 
         stage('Test') {
