@@ -1,16 +1,19 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "webapp"
+    }
+
     stages {
 
         stage('Build') {
             steps {
                 sh '''
-                #!/bin/bash
                 echo "Building from branch: ${BRANCH_NAME}"
 
-                # Build docker image using pre-built container
-                docker build -t webapp:${BRANCH_NAME} .
+                # Build docker image tagged with branch name
+                docker build -t ${IMAGE_NAME}:${BRANCH_NAME} .
                 '''
             }
         }
@@ -18,11 +21,10 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                #!/bin/bash
                 echo "Testing branch: ${BRANCH_NAME}"
 
-                # Simple test: verify code exists inside container
-                docker run --rm webapp:${BRANCH_NAME} ls /var/www/html
+                # Verify files exist inside the container
+                docker run --rm ${IMAGE_NAME}:${BRANCH_NAME} ls /var/www/html
                 '''
             }
         }
@@ -33,18 +35,17 @@ pipeline {
             }
             steps {
                 sh '''
-                #!/bin/bash
                 echo "Deploying to production"
 
-                # Stop existing container if running
+                # Stop & remove existing container safely
                 docker stop webapp-prod || true
                 docker rm webapp-prod || true
 
                 # Run production container
                 docker run -d \
-                --name webapp-prod \
-                -p 80:80 \
-                webapp:master
+                  --name webapp-prod \
+                  -p 80:80 \
+                  ${IMAGE_NAME}:master
                 '''
             }
         }
